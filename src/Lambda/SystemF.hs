@@ -17,24 +17,18 @@ data Type = TVar Sym
           | ForAll Sym Type
           deriving (Eq, Read, Show)
 
+-- M[x:=N], where x is free in M
+-- substitute free occurrences of 'sym' in 'm' with 'n'
+substitution :: LambdaTerm -> Sym -> LambdaTerm -> LambdaTerm
+substitution m@(Var var)           sym n | var == sym  = n
+                                         | otherwise   = m
+substitution   (App p q)           sym n = App (substitution p sym n) (substitution q sym n)
+substitution m@(Lam var symType p) sym n | var == sym  = m  -- 'sym' is bound - no substitution
+                                         | otherwise   = substitution p sym n
+substitution m@(TLam var p)        sym n | var == sym  = m  -- 'sym' is bound - no substitution
+                                         | otherwise   = substitution p sym n
 
-
-
--- contexts
-newtype Env = Env [(Sym, Type)]
-              deriving Show
-
--- empty context
-emptyEnv :: Env
-emptyEnv = Env []
-
--- extend the context
-extend :: Sym -> Type -> Env -> Env
-extend s t (Env r) = Env $ (s, t) : r
-
-
-
-betaReduction :: LambdaTerm -> LambdaTerm
-betaReduction (App (Lam sym symType term) arg) = term
-betaReduction (App (TLam typeVar term) arg) = term
-betaReduction t = t
+betaConversion :: LambdaTerm -> LambdaTerm
+betaConversion (App (Lam sym symType term) arg) = substitution term sym arg
+betaConversion (App (TLam typeVar term) arg)    = substitution term typeVar arg
+betaConversion t = t

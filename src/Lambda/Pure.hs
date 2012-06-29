@@ -11,6 +11,12 @@ f' = App (Lam "x" $ Lam "y" $ Var "x") (Lam "z" $ App (Var "z") (Var "a"))
 -- yx(\x.x) = (yx)(\x.x)
 yx = App (App (Var "y") (Var "x")) (Lam "x" $ Var "x")
 
+-- eta-conversion
+-- \x.xx -> \x.xx
+--etaConversion $ Lam "x" (App (Var "x") (Var "x")) == Lam "x" (App (Var "x") (Var "x"))
+-- \x.yx -> y
+--etaConversion $ Lam "x" (App (Var "y") (Var "x")) == Var "y"
+
 -- Lambda-term
 type Sym = String
 data LambdaTerm = Var Sym                    -- variable
@@ -29,13 +35,24 @@ substitution :: LambdaTerm -> Sym -> LambdaTerm -> LambdaTerm
 substitution m@(Var var)   sym n | var == sym  = n
                                  | otherwise   = m
 substitution   (App p q)   sym n = App (substitution p sym n) (substitution q sym n)
-substitution m@(Lam var m) sym n | var == sym  = m  -- 'sym' is bound - no substitution
-                                 | otherwise   = substitution m sym n
+substitution m@(Lam var p) sym n | var == sym  = m  -- 'sym' is bound - no substitution
+                                 | otherwise   = substitution p sym n
 
 -- (\x.M)N = M[x:=N]
+betaConversion :: LambdaTerm -> LambdaTerm
+betaConversion (App (Lam x m) n) = substitution m x n
+betaConversion m = m
+
 betaReduction :: LambdaTerm -> LambdaTerm
-betaReduction (App (Lam x m) n) = substitution m x n
-betaReduction m = m
+betaReduction redex@(App (Lam x m) n) = betaReduction $ betaConversion redex
+betaReduction (App p q) = App (betaReduction $ betaConversion p) (betaReduction $ betaConversion q)
+
+--alphaConversion :: LambdaTerm -> Sym -> Sym -> LambdaTerm
+
+-- \lambda x.Mx = M, when x \not\in FV(M)
+etaConversion :: LambdaTerm -> LambdaTerm
+etaConversion n@(Lam x (App m (Var y))) | x == y && x `elem` (freeVars m) = n
+                                        | otherwise                       = m
 
 -- Combinators
 isCombinator :: LambdaTerm -> Bool
