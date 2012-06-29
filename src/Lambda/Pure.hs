@@ -23,7 +23,7 @@ data LambdaTerm = Var Sym                    -- variable
 freeVars :: LambdaTerm -> [Sym]
 freeVars (Var v)     = [v]
 freeVars (App p q) = freeVars p `union` freeVars q
-freeVars (Lam v t)   = freeVars t \\ [v]
+freeVars (Lam v t) = freeVars t \\ [v]
 
 -- M[x:=N], where x is free in M
 -- substitute free occurrences of 'sym' in 'm' with 'n'
