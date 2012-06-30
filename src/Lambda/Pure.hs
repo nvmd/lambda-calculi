@@ -68,7 +68,7 @@ kComb :: LambdaTerm
 kComb = Lam "x" $ Lam "y" $ Var "x"
 
 sComb :: LambdaTerm
-sComb = Lam "x" $ Lam "y" $ Lam "z" $ App (App (Var "x") (Var "y")) (App (Var "y") (Var "z"))
+sComb = Lam "x" $ Lam "y" $ Lam "z" $ App (App (Var "x") (Var "z")) (App (Var "y") (Var "z"))
 
 hI :: a -> a
 hI x = x
