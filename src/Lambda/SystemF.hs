@@ -8,14 +8,29 @@ data LambdaTerm = Var Sym                    -- variable
                 | App LambdaTerm LambdaTerm  -- application
                 | Lam Sym Type LambdaTerm    -- abstraction (\Sym:Type.LambdaTerm)
                 | TLam Sym LambdaTerm        -- abstraction by type variable (\Sym.LambdaTerm)
-                deriving (Eq, Read, Show)
+                deriving (Eq, Read)
+
+-- id: (a:*) -> a -> a
+-- id = \(a:*).\(x:a).x, id = \(a:*)(x:a).x
+
+instance Show LambdaTerm where
+    show (Var sym)               = sym
+    show (App (Var s1) (Var s2)) = s1 ++ s2
+    show (App t1 t2)             = "(" ++ show t1 ++ ")(" ++ show t2 ++ ")"
+    show (Lam sym symType term)  = "\\(" ++ sym ++ ":" ++ show symType ++ ")." ++ show term
+    show (TLam sym term)         = "\\(" ++ sym ++ ":*)." ++ show term
 
 -- Types (same for \lambda2-Curry and \lambda2-Church)
 -- \mathbb{T} = \mathbb{V} | \mathbb{T} \rightarrow \mathbb{T} | \forall \mathbb{V}.\mathbb{T}
 data Type = TVar Sym
           | Arrow Type Type
           | ForAll Sym Type
-          deriving (Eq, Read, Show)
+          deriving (Eq, Read)
+
+instance Show Type where
+    show (TVar sym)     = sym
+    show (Arrow t1 t2)  = "(" ++ show t1 ++ "->" ++ show t2 ++ ")"
+    show (ForAll sym t) = "(" ++ sym ++ ":" ++ show t ++ ")"
 
 -- M[x:=N], where x is free in M
 -- substitute free occurrences of 'sym' in 'm' with 'n'

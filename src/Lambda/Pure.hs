@@ -18,7 +18,13 @@ type Sym = String
 data LambdaTerm = Var Sym                    -- variable
                 | App LambdaTerm LambdaTerm  -- application
                 | Lam Sym LambdaTerm         -- abstraction
-                deriving (Eq, Read, Show)
+                deriving (Eq, Read)
+
+instance Show LambdaTerm where
+    show (Var sym)               = sym
+    show (App (Var s1) (Var s2)) = s1 ++ s2
+    show (App t1 t2)             = "(" ++ show t1 ++ ")(" ++ show t2 ++ ")"
+    show (Lam sym t)             = "\\" ++ sym ++ "." ++ show t
 
 freeVars :: LambdaTerm -> [Sym]
 freeVars (Var v)     = [v]
@@ -69,4 +75,3 @@ hI x = x
 
 hK :: a -> b -> a
 hK x _ = x
-
