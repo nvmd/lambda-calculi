@@ -7,6 +7,11 @@ f' = App (Lam "x" $ Lam "y" $ Var "x") (Lam "z" $ App (Var "z") (Var "a"))
 -- yx(\x.x) = (yx)(\x.x)
 yx = App (App (Var "y") (Var "x")) (Lam "x" $ Var "x")
 
+kiComb = App kComb iComb
+iikstarComb = App (App iComb iComb) kstarComb
+-- kiComb == iikstarComb == \y.\x.x
+-- substitution kComb "x" iComb == \x.\y.x == kComb -- because 'x' is bound in kComb
+
 -- eta-conversion
 -- \x.xx -> \x.xx
 --etaConversion $ Lam "x" (App (Var "x") (Var "x")) == Lam "x" (App (Var "x") (Var "x"))
@@ -27,7 +32,7 @@ instance Show LambdaTerm where
     show (Lam sym t)             = "\\" ++ sym ++ "." ++ show t
 
 freeVars :: LambdaTerm -> [Sym]
-freeVars (Var v)     = [v]
+freeVars (Var v)   = [v]
 freeVars (App p q) = freeVars p `union` freeVars q
 freeVars (Lam v t) = freeVars t \\ [v]
 
@@ -37,8 +42,9 @@ substitution :: LambdaTerm -> Sym -> LambdaTerm -> LambdaTerm
 substitution m@(Var var)   sym n | var == sym  = n
                                  | otherwise   = m
 substitution   (App p q)   sym n = App (substitution p sym n) (substitution q sym n)
-substitution m@(Lam var p) sym n | var == sym  = m  -- 'sym' is bound - no substitution
-                                 | otherwise   = substitution p sym n
+substitution m@(Lam var p) sym n | var == sym            = m  -- 'sym' is bound - no substitution
+                                 | var `elem` freeVars n = error (var ++ " \\in FV(N)")
+                                 | otherwise             = Lam var $ substitution p sym n
 
 -- (\x.M)N = M[x:=N]
 betaConversion :: LambdaTerm -> LambdaTerm
@@ -47,7 +53,9 @@ betaConversion m = m
 
 betaReduction :: LambdaTerm -> LambdaTerm
 betaReduction redex@(App (Lam x m) n) = betaReduction $ betaConversion redex
-betaReduction (App p q) = App (betaReduction $ betaConversion p) (betaReduction $ betaConversion q)
+betaReduction (App p q) = App (betaReduction p) (betaReduction q)
+betaReduction (Lam v p) = Lam v $ betaReduction p
+betaReduction m = m
 
 --alphaConversion :: LambdaTerm -> Sym -> Sym -> LambdaTerm
 
@@ -66,6 +74,9 @@ iComb = Lam "x" $ Var "x"
 
 kComb :: LambdaTerm
 kComb = Lam "x" $ Lam "y" $ Var "x"
+
+kstarComb :: LambdaTerm
+kstarComb = Lam "x" $ Lam "y" $ Var "y"
 
 sComb :: LambdaTerm
 sComb = Lam "x" $ Lam "y" $ Lam "z" $ App (App (Var "x") (Var "z")) (App (Var "y") (Var "z"))
