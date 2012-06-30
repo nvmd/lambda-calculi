@@ -17,7 +17,7 @@ instance Show Type where
 
 -- all elements of the type (in this type system)
 freeTypeVars :: Type -> [Sym]
-freeTypeVars (TVar v) = [v]
+freeTypeVars (TVar v)      = [v]
 freeTypeVars (Arrow t1 t2) = freeTypeVars t1 `union` freeTypeVars t2
 
 -- contexts
