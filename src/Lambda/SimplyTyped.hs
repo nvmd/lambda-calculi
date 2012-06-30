@@ -9,7 +9,11 @@ t = Arrow (Arrow (TVar "a") (TVar "b")) (TVar "c")
 -- Types
 data Type = TVar Sym
           | Arrow Type Type
-          deriving (Eq, Read, Show)
+          deriving (Eq, Read)
+
+instance Show Type where
+    show (TVar sym)     = sym
+    show (Arrow t1 t2)  = "(" ++ show t1 ++ "->" ++ show t2 ++ ")"
 
 -- all elements of the type (in this type system)
 freeTypeVars :: Type -> [Sym]
