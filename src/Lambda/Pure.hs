@@ -53,8 +53,9 @@ betaConversion m = m
 
 betaReduction :: LambdaTerm -> LambdaTerm
 betaReduction redex@(App (Lam x m) n) = betaReduction $ betaConversion redex
-betaReduction m@(App p q) = if r == m then r else betaReduction r -- application can potentially become redex after
-                            where r = App (betaReduction p) (betaReduction q) -- beta-reduction of it's terms
+betaReduction m@(App p q) | r == m    = r               -- application can potentially become redex after...
+                          | otherwise = betaReduction r -- ...beta-reduction of it's terms
+                          where r = App (betaReduction p) (betaReduction q)
 betaReduction (Lam v p) = Lam v $ betaReduction p
 betaReduction m = m
 
