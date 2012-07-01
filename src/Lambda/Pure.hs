@@ -18,6 +18,11 @@ iikstarComb = App (App iComb iComb) kstarComb
 -- \x.yx -> y
 --etaConversion $ Lam "x" (App (Var "y") (Var "x")) == Var "y"
 
+-- alpha-conversion
+-- e.g., substitution yxy "x" (Var "y")
+yxy = Lam "y" $ App (Var "x") (Var "y")
+-- causes *** Exception: y \in FV(y) --- use alpha-conversion needs to be used to prevent it
+
 -- Lambda-term
 type Sym = String
 data LambdaTerm = Var Sym                    -- variable
@@ -43,8 +48,8 @@ substitution m@(Var var)   sym n | var == sym  = n
                                  | otherwise   = m
 substitution   (App p q)   sym n = App (substitution p sym n) (substitution q sym n)
 substitution m@(Lam var p) sym n | var == sym            = m  -- 'sym' is bound - no substitution
-                                 | var `elem` freeVars n = error (var ++ " \\in FV(N)")
-                                 | otherwise             = Lam var $ substitution p sym n
+                                 | var `elem` freeVars n = error (var ++ " \\in FV(" ++ show n ++ ")")
+                                 | otherwise             = Lam var $ substitution p sym n   -- var /= sym
 
 -- (\x.M)N = M[x:=N]
 betaConversion :: LambdaTerm -> LambdaTerm
@@ -59,7 +64,13 @@ betaReduction m@(App p q) | r == m    = r               -- application can poten
 betaReduction (Lam v p) = Lam v $ betaReduction p
 betaReduction m = m
 
---alphaConversion :: LambdaTerm -> Sym -> Sym -> LambdaTerm
+alphaConversion :: LambdaTerm -> Sym -> Sym -> LambdaTerm
+alphaConversion (Lam v m) x y | v /= x = Lam v $ alphaConversion m x y
+                              | y `elem` freeVars m = error (y ++ " \\in FV(" ++ show m ++ ")")
+                              | otherwise = Lam y $ substitution m x (Var y) -- v == x
+alphaConversion (App p q) x y = App (alphaConversion p x y) (alphaConversion q x y)
+alphaConversion m@(Var v) x y | v == x    = Var y
+                              | otherwise = m
 
 -- \lambda x.Mx = M, when x \not\in FV(M)
 etaConversion :: LambdaTerm -> LambdaTerm
