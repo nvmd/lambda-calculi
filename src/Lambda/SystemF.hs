@@ -1,4 +1,5 @@
 module Lambda.SystemF where
+import Data.List
 
 -- \lambda2, polymorphic typed, second-order typed, second-order polymorphic typed, system F
 
@@ -32,18 +33,40 @@ instance Show Type where
     show (Arrow t1 t2)  = "(" ++ show t1 ++ "->" ++ show t2 ++ ")"
     show (ForAll sym t) = "(" ++ sym ++ ":" ++ show t ++ ")"
 
+freeVars :: LambdaTerm -> [Sym]
+freeVars (Var v)         = [v]
+freeVars (App p q)       = freeVars p `union` freeVars q
+freeVars (Lam v vType t) = freeVars t \\ [v]
+freeVars (TLam v t)      = freeVars t \\ [v]
+
 -- M[x:=N], where x is free in M
 -- substitute free occurrences of 'sym' in 'm' with 'n'
 substitution :: LambdaTerm -> Sym -> LambdaTerm -> LambdaTerm
 substitution m@(Var var)           sym n | var == sym  = n
                                          | otherwise   = m
 substitution   (App p q)           sym n = App (substitution p sym n) (substitution q sym n)
-substitution m@(Lam var symType p) sym n | var == sym  = m  -- 'sym' is bound - no substitution
-                                         | otherwise   = substitution p sym n
+substitution m@(Lam var varType p) sym n | var == sym  = m  -- 'sym' is bound - no substitution
+                                         | var `elem` freeVars n = error (var ++ " \\in FV(" ++ show n ++ ")")
+                                         | varType == sym = Lam var sym $ substitution p sym n
+                                         | otherwise   = Lam var varType $ substitution p sym n
 substitution m@(TLam var p)        sym n | var == sym  = m  -- 'sym' is bound - no substitution
-                                         | otherwise   = substitution p sym n
+                                         | otherwise   = TLam var $ substitution p sym n
 
 betaConversion :: LambdaTerm -> LambdaTerm
 betaConversion (App (Lam sym symType term) arg) = substitution term sym arg
 betaConversion (App (TLam typeVar term) arg)    = substitution term typeVar arg
 betaConversion t = t
+
+betaReduction :: LambdaTerm -> LambdaTerm
+betaReduction redex@(App (Lam x xType m) n) = betaReduction $ betaConversion redex
+betaReduction redex@(App (TLam x m) n)      = betaReduction $ betaConversion redex
+betaReduction m@(App p q) | r == m    = r               -- application can potentially become redex after...
+                          | otherwise = betaReduction r -- ...beta-reduction of it's terms
+                          where r = App (betaReduction p) (betaReduction q)
+betaReduction (Lam v vType p) = Lam v vType $ betaReduction p
+betaReduction (TLam v p)      = TLam v $ betaReduction p
+betaReduction m = m
+
+-- standard combinators
+iComb :: LambdaTerm
+iComb = TLam "a" $ Lam "x" (TVar "a") $ Var "x"
