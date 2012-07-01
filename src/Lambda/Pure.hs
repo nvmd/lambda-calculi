@@ -11,6 +11,7 @@ kiComb = App kComb iComb
 iikstarComb = App (App iComb iComb) kstarComb
 -- kiComb == iikstarComb == \y.\x.x == kstarComb
 -- substitution kComb "x" iComb == \x.\y.x == kComb -- because 'x' is bound in kComb
+i_kiComb = App iComb $ App kComb iComb
 
 -- eta-conversion
 -- \x.xx -> \x.xx
