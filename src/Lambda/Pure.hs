@@ -9,7 +9,7 @@ yx = App (App (Var "y") (Var "x")) (Lam "x" $ Var "x")
 
 kiComb = App kComb iComb
 iikstarComb = App (App iComb iComb) kstarComb
--- kiComb == iikstarComb == \y.\x.x
+-- kiComb == iikstarComb == \y.\x.x == kstarComb
 -- substitution kComb "x" iComb == \x.\y.x == kComb -- because 'x' is bound in kComb
 
 -- eta-conversion
@@ -53,7 +53,8 @@ betaConversion m = m
 
 betaReduction :: LambdaTerm -> LambdaTerm
 betaReduction redex@(App (Lam x m) n) = betaReduction $ betaConversion redex
-betaReduction (App p q) = App (betaReduction p) (betaReduction q)
+betaReduction m@(App p q) = if r == m then r else betaReduction r -- application can potentially become redex after
+                            where r = App (betaReduction p) (betaReduction q) -- beta-reduction of it's terms
 betaReduction (Lam v p) = Lam v $ betaReduction p
 betaReduction m = m
 
