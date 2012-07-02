@@ -69,7 +69,7 @@ typeSubstitution :: Type -> Sym -> Type -> Type
 typeSubstitution var@(TVar v)  s t | v == s    = t
                                    | otherwise = var
 typeSubstitution (Arrow t1 t2) s t = Arrow (typeSubstitution t1 s t) (typeSubstitution t2 s t)
-typeSubstitution (ForAll v t1) s t | v == s    = typeSubstitution t1 s t
+typeSubstitution (ForAll v t1) s t | v == s    = ForAll v t1 -- 's' is bound - no substitution
                                    | otherwise = ForAll v $ typeSubstitution t1 s t
 
 betaConversion :: LambdaTerm -> LambdaTerm
