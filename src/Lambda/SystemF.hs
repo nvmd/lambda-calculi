@@ -64,9 +64,12 @@ substitutionWithType (App p q) sym n = App (substitutionWithType p sym n) (subst
 substitutionWithType (TApp p s) sym n = TApp (substitutionWithType p sym n) s
 substitutionWithType m _ _ = m
 
--- stub
+-- substitute type variable 's' in the type with type 't'
 typeSubstitution :: Type -> Sym -> Type -> Type
-typeSubstitution t v s = t
+typeSubstitution var@(TVar v)  s t | v == s    = t
+                                   | otherwise = var
+typeSubstitution (Arrow t1 t2) s t = Arrow (typeSubstitution t1 s t) (typeSubstitution t2 s t)
+typeSubstitution (ForAll v t1) s t = typeSubstitution t1 s t
 
 betaConversion :: LambdaTerm -> LambdaTerm
 betaConversion (App (Lam sym symType term) arg) = substitution term sym arg
