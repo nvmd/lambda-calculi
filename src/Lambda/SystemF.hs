@@ -3,10 +3,14 @@ import Data.List
 
 -- \lambda2, polymorphic typed, second-order typed, second-order polymorphic typed, system F
 
+i_int = TApp iComb (TVar "Int")
+i_int_3 = App (TApp iComb (TVar "Int")) (Var "3")
+
 -- à la Church
 type Sym = String
 data LambdaTerm = Var Sym                    -- variable
                 | App LambdaTerm LambdaTerm  -- application
+                | TApp LambdaTerm Type
                 | Lam Sym Type LambdaTerm    -- abstraction (\Sym:Type.LambdaTerm)
                 | TLam Sym LambdaTerm        -- abstraction by type variable (\Sym.LambdaTerm)
                 deriving (Eq, Read)
@@ -18,6 +22,7 @@ instance Show LambdaTerm where
     show (Var sym)               = sym
     show (App (Var s1) (Var s2)) = s1 ++ s2
     show (App t1 t2)             = "(" ++ show t1 ++ ")(" ++ show t2 ++ ")"
+    show (TApp t s)              = "(" ++ show t ++ ")(" ++ show s ++ ")"
     show (Lam sym symType term)  = "\\(" ++ sym ++ ":" ++ show symType ++ ")." ++ show term
     show (TLam sym term)         = "\\(" ++ sym ++ ":*)." ++ show term
 
@@ -36,6 +41,7 @@ instance Show Type where
 freeVars :: LambdaTerm -> [Sym]
 freeVars (Var v)         = [v]
 freeVars (App p q)       = freeVars p `union` freeVars q
+freeVars (TApp p s)      = freeVars p
 freeVars (Lam v vType t) = freeVars t \\ [v]
 freeVars (TLam v t)      = freeVars t \\ [v]
 
@@ -47,19 +53,29 @@ substitution m@(Var var)           sym n | var == sym  = n
 substitution   (App p q)           sym n = App (substitution p sym n) (substitution q sym n)
 substitution m@(Lam var varType p) sym n | var == sym  = m  -- 'sym' is bound - no substitution
                                          | var `elem` freeVars n = error (var ++ " \\in FV(" ++ show n ++ ")")
-                                         | varType == sym = Lam var sym $ substitution p sym n
                                          | otherwise   = Lam var varType $ substitution p sym n
 substitution m@(TLam var p)        sym n | var == sym  = m  -- 'sym' is bound - no substitution
                                          | otherwise   = TLam var $ substitution p sym n
 
+substitutionWithType :: LambdaTerm -> Sym -> Type -> LambdaTerm
+substitutionWithType m@(Lam var varType p) sym n = Lam var (typeSubstitution varType sym n)
+                                                           (substitutionWithType p sym n)
+substitutionWithType (App p q) sym n = App (substitutionWithType p sym n) (substitutionWithType q sym n)
+substitutionWithType (TApp p s) sym n = TApp (substitutionWithType p sym n) s
+substitutionWithType m _ _ = m
+
+-- stub
+typeSubstitution :: Type -> Sym -> Type -> Type
+typeSubstitution t v s = t
+
 betaConversion :: LambdaTerm -> LambdaTerm
 betaConversion (App (Lam sym symType term) arg) = substitution term sym arg
-betaConversion (App (TLam typeVar term) arg)    = substitution term typeVar arg
+betaConversion (TApp (TLam typeVar term) arg)   = substitutionWithType term typeVar arg
 betaConversion t = t
 
 betaReduction :: LambdaTerm -> LambdaTerm
 betaReduction redex@(App (Lam x xType m) n) = betaReduction $ betaConversion redex
-betaReduction redex@(App (TLam x m) n)      = betaReduction $ betaConversion redex
+betaReduction redex@(TApp (TLam x m) n)     = betaReduction $ betaConversion redex
 betaReduction m@(App p q) | r == m    = r               -- application can potentially become redex after...
                           | otherwise = betaReduction r -- ...beta-reduction of it's terms
                           where r = App (betaReduction p) (betaReduction q)
