@@ -6,6 +6,8 @@ import Data.Maybe
 
 i_int = TApp iComb (TVar "Int")
 i_int_3 = App (TApp iComb (TVar "Int")) (Var "3")
+--checkLambdaType iComb emptyEnv (ForAll "a" $ Arrow (TVar "a") (TVar "a")) == True
+--checkLambdaType iComb emptyEnv (ForAll "a" $ Arrow (TVar "x") (TVar "x")) == False
 
 -- à la Church
 type Sym = String
@@ -15,9 +17,6 @@ data LambdaTerm = Var Sym                    -- variable
                 | Lam Sym Type LambdaTerm    -- abstraction (\Sym:Type.LambdaTerm)
                 | TLam Sym LambdaTerm        -- abstraction by type variable (\Sym.LambdaTerm)
                 deriving (Eq, Read)
-
--- id: (a:*) -> a -> a
--- id = \(a:*).\(x:a).x, id = \(a:*)(x:a).x
 
 instance Show LambdaTerm where
     show (Var sym)               = sym
@@ -141,5 +140,7 @@ checkLambdaType (Var v)     (Env e) t             = (v, t) `elem` e && checkType
 checkLambdaType _           _       _             = False
 
 -- standard combinators
+-- id: (a:*) -> a -> a
+-- id = \(a:*).\(x:a).x, id = \(a:*)(x:a).x
 iComb :: LambdaTerm
 iComb = TLam "a" $ Lam "x" (TVar "a") $ Var "x"
