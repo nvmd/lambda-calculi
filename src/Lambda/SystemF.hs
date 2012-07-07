@@ -38,6 +38,18 @@ instance Show Type where
     show (Arrow t1 t2)  = "(" ++ show t1 ++ "->" ++ show t2 ++ ")"
     show (ForAll sym t) = "(" ++ sym ++ ":" ++ show t ++ ")"
 
+-- contexts
+newtype Env = Env [(Sym, Type)]
+              deriving Show
+
+-- empty context
+emptyEnv :: Env
+emptyEnv = Env []
+
+-- extend the context
+extend :: Sym -> Type -> Env -> Env
+extend s t (Env r) = Env $ (s, t) : r
+
 freeVars :: LambdaTerm -> [Sym]
 freeVars (Var v)         = [v]
 freeVars (App p q)       = freeVars p `union` freeVars q
@@ -64,7 +76,7 @@ substitutionWithType (App p q) sym n = App (substitutionWithType p sym n) (subst
 substitutionWithType (TApp p s) sym n = TApp (substitutionWithType p sym n) s
 substitutionWithType m _ _ = m
 
--- substitute type variable 's' in the type with type 't'
+-- substitute type variable 's' in the type (1st arg.) with type 't'
 typeSubstitution :: Type -> Sym -> Type -> Type
 typeSubstitution var@(TVar v)  s t | v == s    = t
                                    | otherwise = var
@@ -86,6 +98,36 @@ betaReduction m@(App p q) | r == m    = r               -- application can poten
 betaReduction (Lam v vType p) = Lam v vType $ betaReduction p
 betaReduction (TLam v p)      = TLam v $ betaReduction p
 betaReduction m = m
+
+-- type checking
+
+isDerivableFromBasis
+
+checkType :: LambdaTerm -> Type -> Bool
+checkType m t = True
+
+symIsType :: Sym -> Env -> Bool
+symIsType s e = (s, TVar "*") `elem` e
+
+--let e_ff = [("f", ForAll "a" $ Arrow (TVar "a") (TVar "a")), ("b", TVar "*")]
+
+-- check whether the type is derivable from the basis
+checkType :: Type -> Env -> Bool
+checkType (TVar "*") e = True -- will it be valid if it is present in lambda-term?
+checkType (TVar v)   e = isJust vIndex && isJust vType && checkType $ fromJust vType
+                         where
+                            (_, vType) = find (\(s, _) -> s == v) e -- TODO: move Maybe inside the pair
+                            vIndex = elemIndex (v, vType) e
+checkType (Arrow t1 t2) e = checkType t1 e && checkType t2 e
+checkType (ForAll v t)  e = checkType t $ extend v (TVar "*") e
+
+-- should we work with 'expanded' types?
+checkLambdaType :: LambdaTerm -> Env -> Type -> Bool
+checkLambdaType (App m n)   e (Arrow t1 t2) = checkLambdaType m e t1 && checkLambdaType n e t2
+checkLambdaType (Lam v t m) e (Arrow t1 t2) = t == t1 && checkLambdaType m e t2
+checkLambdaType (TLam v m)  e (ForAll v1 t) = v == v1 && checkLambdaType m e t
+checkLambdaType (Var v)     e t             = (v, t) `elem` e && checkType t e
+checkLambdaType _           _ _             = False
 
 -- standard combinators
 iComb :: LambdaTerm
