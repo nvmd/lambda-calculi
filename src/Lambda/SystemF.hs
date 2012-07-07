@@ -130,14 +130,14 @@ maybePairToPairMaybe _             = (Nothing, Nothing)
 
 -- should we work with 'expanded' types?
 checkLambdaType :: LambdaTerm -> Env -> Type -> Bool
-checkLambdaType (App m n)   e       (Arrow t1 t2) = checkType t1 e && checkLambdaType m e t1
-                                                    && checkType t2 e && checkLambdaType n e t2
-checkLambdaType (Lam v t m) e       (Arrow t1 t2) = t == t1 && checkType t e
-                                                    && checkLambdaType m (extend v t e) t2
-checkLambdaType (TLam v m)  e       (ForAll v1 t) = v == v1
-                                                    && checkLambdaType m (extend v (TVar "*") e) t
-checkLambdaType (Var v)     (Env e) t             = (v, t) `elem` e && checkType t (Env e)
-checkLambdaType _           _       _             = False
+checkLambdaType (App m n)   e (Arrow t1 t2) = checkType t1 e && checkLambdaType m e t1
+                                              && checkType t2 e && checkLambdaType n e t2
+checkLambdaType (Lam v t m) e (Arrow t1 t2) = t == t1 && checkType t e
+                                              && checkLambdaType m (extend v t e) t2
+checkLambdaType (TLam v m)  e (ForAll v1 t) = v == v1
+                                              && checkLambdaType m (extend v (TVar "*") e) t
+checkLambdaType (Var v) (Env e) t = (v, t) `elem` e && checkType t (Env e)
+checkLambdaType _       _       _ = False
 
 -- standard combinators
 -- id: (a:*) -> a -> a
