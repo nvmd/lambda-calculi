@@ -1,5 +1,6 @@
 module Lambda.SystemF where
 import Data.List
+import Data.Maybe
 
 -- \lambda2, polymorphic typed, second-order typed, second-order polymorphic typed, system F
 
@@ -101,33 +102,43 @@ betaReduction m = m
 
 -- type checking
 
-isDerivableFromBasis
-
-checkType :: LambdaTerm -> Type -> Bool
-checkType m t = True
-
 symIsType :: Sym -> Env -> Bool
-symIsType s e = (s, TVar "*") `elem` e
+symIsType s (Env e) = (s, TVar "*") `elem` e
 
 --let e_ff = [("f", ForAll "a" $ Arrow (TVar "a") (TVar "a")), ("b", TVar "*")]
 
 -- check whether the type is derivable from the basis
 checkType :: Type -> Env -> Bool
-checkType (TVar "*") e = True -- will it be valid if it is present in lambda-term?
-checkType (TVar v)   e = isJust vIndex && isJust vType && checkType $ fromJust vType
-                         where
-                            (_, vType) = find (\(s, _) -> s == v) e -- TODO: move Maybe inside the pair
-                            vIndex = elemIndex (v, vType) e
+checkType (TVar "*")    _  = True -- will it be valid if it is present in lambda-term?
+checkType (TVar v) (Env e) = isJust vIndex && isJust vType && checkType (fromJust vType) (Env e)
+                           where
+                            (_, vType) = maybePairToPairMaybe $ find (\(s, _) -> s == v) e
+                            vIndex     = elemIndex (v, fromJust vType) e
 checkType (Arrow t1 t2) e = checkType t1 e && checkType t2 e
-checkType (ForAll v t)  e = checkType t $ extend v (TVar "*") e
+checkType (ForAll v t)  e = checkType t $ extend v (TVar "*") $ extend v (TVar "*") e
+
+expandType :: Type -> Env -> Type
+expandType (TVar v) (Env e) | isJust vType && fromJust vType /= (TVar "*") = fromJust vType
+                            | isJust vType = (TVar v)
+                            where
+                                (_, vType) = maybePairToPairMaybe $ find (\(s, _) -> s == v) e
+expandType (Arrow t1 t2) e = Arrow (expandType t1 e) (expandType t2 e)
+expandType (ForAll v t)  e = ForAll v $ expandType t $ extend v (TVar "*") e
+
+maybePairToPairMaybe :: Maybe (a, b) -> (Maybe a, Maybe b)
+maybePairToPairMaybe (Just (s, t)) = (Just s, Just t)
+maybePairToPairMaybe _             = (Nothing, Nothing)
 
 -- should we work with 'expanded' types?
 checkLambdaType :: LambdaTerm -> Env -> Type -> Bool
-checkLambdaType (App m n)   e (Arrow t1 t2) = checkLambdaType m e t1 && checkLambdaType n e t2
-checkLambdaType (Lam v t m) e (Arrow t1 t2) = t == t1 && checkLambdaType m e t2
-checkLambdaType (TLam v m)  e (ForAll v1 t) = v == v1 && checkLambdaType m e t
-checkLambdaType (Var v)     e t             = (v, t) `elem` e && checkType t e
-checkLambdaType _           _ _             = False
+checkLambdaType (App m n)   e       (Arrow t1 t2) = checkType t1 e && checkLambdaType m e t1
+                                                    && checkType t2 e && checkLambdaType n e t2
+checkLambdaType (Lam v t m) e       (Arrow t1 t2) = t == t1 && checkType t e
+                                                    && checkLambdaType m (extend v t e) t2
+checkLambdaType (TLam v m)  e       (ForAll v1 t) = v == v1
+                                                    && checkLambdaType m (extend v (TVar "*") e) t
+checkLambdaType (Var v)     (Env e) t             = (v, t) `elem` e && checkType t (Env e)
+checkLambdaType _           _       _             = False
 
 -- standard combinators
 iComb :: LambdaTerm
