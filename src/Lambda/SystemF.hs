@@ -8,6 +8,12 @@ i_int = TApp iComb (TVar "Int")
 i_int_3 = App (TApp iComb (TVar "Int")) (Var "3")
 --checkLambdaType iComb emptyEnv (ForAll "a" $ Arrow (TVar "a") (TVar "a")) == True
 --checkLambdaType iComb emptyEnv (ForAll "a" $ Arrow (TVar "x") (TVar "x")) == False
+--checkLambdaType (betaReduction $ TApp iComb (TVar "Int"))
+--                (extend "Int" (TVar "*") emptyEnv)
+--                (Arrow (TVar "Int") (TVar "Int")) == True
+-- checkLambdaType (TApp iComb (TVar "Int"))
+--                 (extend "Int" (TVar "*") emptyEnv)
+--                 (Arrow (TVar "Int") (TVar "Int")) == True
 
 -- à la Church
 type Sym = String
@@ -132,6 +138,9 @@ maybePairToPairMaybe _             = (Nothing, Nothing)
 checkLambdaType :: LambdaTerm -> Env -> Type -> Bool
 checkLambdaType (App m n)   e (Arrow t1 t2) = checkType t1 e && checkLambdaType m e t1
                                               && checkType t2 e && checkLambdaType n e t2
+checkLambdaType (TApp (TLam v m) n) e t     = checkType t e
+                                              && checkLambdaType (substitutionWithType m v n)
+                                                (extend v n e) (typeSubstitution t v n)
 checkLambdaType (Lam v t m) e (Arrow t1 t2) = t == t1 && checkType t e
                                               && checkLambdaType m (extend v t e) t2
 checkLambdaType (TLam v m)  e (ForAll v1 t) = v == v1
