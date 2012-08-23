@@ -57,10 +57,19 @@ substitution m@(Var var)           sym n | var == sym  = n
                                          | otherwise   = m
 substitution   (App p q)           sym n = App (substitution p sym n) (substitution q sym n)
 substitution m@(Lam var varType p) sym n | var == sym  = m  -- 'sym' is bound - no substitution
-                                         | var `elem` freeVars n = error (var ++ " \\in FV(" ++ show n ++ ")")
+                                      -- automagically rename the variables (instead of throwing an error)
+                                      -- in the substitable term so the new name won't cause any confilicts
+                                      -- when the substituting term will be substituted into the substitutable one
+                                      -- | var `elem` freeVars n = error (var ++ " \\in FV(" ++ show n ++ ")")
+                                         | var `elem` freeVars n = Lam newName varType $ alphaConversion p var newName
                                          | otherwise   = Lam var varType $ substitution p sym n
-substitution m@(TLam var p)        sym n | var == sym  = m  -- 'sym' is bound - no substitution
-                                         | otherwise   = TLam var $ substitution p sym n
+                                         where newName = findNameUnboundInTerms var [n,p] -- TODO: evaluate only when needed
+substitution m@(TLam var p)        sym n = TLam var $ substitution p sym n
+
+-- stub
+-- new name must be: "newName `elem` freeVars listOfLambdaTerms == False"
+findNameUnboundInTerms :: Sym -> [LambdaTerm] -> Sym
+findNameUnboundInTerms originalName _ = originalName ++ "\'"
 
 substitutionWithType :: LambdaTerm -> Sym -> Type -> LambdaTerm
 substitutionWithType m@(Lam var varType p) sym n = Lam var (typeSubstitution varType sym n)
@@ -91,3 +100,14 @@ betaReduction m@(App p q) | r == m    = r               -- application can poten
 betaReduction (Lam v vType p) = Lam v vType $ betaReduction p
 betaReduction (TLam v p)      = TLam v $ betaReduction p
 betaReduction m = m
+
+-- rename all occurences of 'x' to 'y' in a lambda-term, but don't touch type variables
+alphaConversion :: LambdaTerm -> Sym -> Sym -> LambdaTerm
+alphaConversion (Lam v vType m) x y | v /= x              = Lam v vType $ alphaConversion m x y
+                                    | y `elem` freeVars m = error (y ++ " \\in FV(" ++ show m ++ ")")
+                                    | otherwise           = Lam y vType $ substitution m x (Var y) -- v == x
+alphaConversion (TLam v m) x y = TLam v $ alphaConversion m x y
+alphaConversion (App p q)  x y = App (alphaConversion p x y) (alphaConversion q x y)
+alphaConversion (TApp p t) x y = TApp (alphaConversion p x y) t
+alphaConversion m@(Var v) x y | v == x    = Var y
+                              | otherwise = m
