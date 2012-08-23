@@ -27,8 +27,18 @@ substitution m@(Var var)   sym n | var == sym  = n
                                  | otherwise   = m
 substitution   (App p q)   sym n = App (substitution p sym n) (substitution q sym n)
 substitution m@(Lam var p) sym n | var == sym            = m  -- 'sym' is bound - no substitution
-                                 | var `elem` freeVars n = error (var ++ " \\in FV(" ++ show n ++ ")")
+                                 -- automagically rename the variables (instead of throwing an error)
+                                 -- in the substitable term so the new name won't cause any confilicts
+                                 -- when the substituting term will be substituted into the substitutable one
+                                 -- | var `elem` freeVars n = error (var ++ " \\in FV(" ++ show n ++ ")")
+                                 | var `elem` freeVars n = Lam newName $ alphaConversion p var newName
                                  | otherwise             = Lam var $ substitution p sym n   -- var /= sym
+                                 where newName = findNameUnboundInTerms var [n,p] -- TODO: evaluate only when needed
+
+-- stub
+-- new name must be: "newName `elem` freeVars listOfLambdaTerms == False"
+findNameUnboundInTerms :: Sym -> [LambdaTerm] -> Sym
+findNameUnboundInTerms originalName _ = originalName ++ "\'"
 
 -- (\x.M)N = M[x:=N]
 betaConversion :: LambdaTerm -> LambdaTerm
@@ -43,10 +53,11 @@ betaReduction m@(App p q) | r == m    = r               -- application can poten
 betaReduction (Lam v p) = Lam v $ betaReduction p
 betaReduction m = m
 
+-- rename all occurences of 'x' to 'y' in a lambda-term
 alphaConversion :: LambdaTerm -> Sym -> Sym -> LambdaTerm
-alphaConversion (Lam v m) x y | v /= x = Lam v $ alphaConversion m x y
+alphaConversion (Lam v m) x y | v /= x              = Lam v $ alphaConversion m x y
                               | y `elem` freeVars m = error (y ++ " \\in FV(" ++ show m ++ ")")
-                              | otherwise = Lam y $ substitution m x (Var y) -- v == x
+                              | otherwise           = Lam y $ substitution m x (Var y) -- v == x
 alphaConversion (App p q) x y = App (alphaConversion p x y) (alphaConversion q x y)
 alphaConversion m@(Var v) x y | v == x    = Var y
                               | otherwise = m
