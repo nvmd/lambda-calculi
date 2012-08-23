@@ -11,7 +11,7 @@ symIsType s (Env e) = (s, TVar "*") `elem` e
 
 --let e_ff = [("f", ForAll "a" $ Arrow (TVar "a") (TVar "a")), ("b", TVar "*")]
 
--- check whether the type is derivable from the basis
+-- check whether the type (Type) is derivable from the basis (Env)
 checkType :: Type -> Env -> Bool
 checkType (TVar "*")    _  = True -- will it be valid if it is present in lambda-term?
 checkType (TVar v) (Env e) = isJust vIndex && isJust vType && checkType (fromJust vType) (Env e)
