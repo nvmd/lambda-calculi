@@ -21,13 +21,15 @@ parseTerm = runParser lambdaTerm () ""
 -- P: '('T')'
 
 --lambdaTerm :: GenParser Char st LambdaTerm
-lambdaTerm = lambdaVar <|> lambdaLam <|> paren <|> lambdaApp
+lambdaTerm = lambdaAtom `chainl1` (do {string " " <|> string "\\"; return (App)})
+
+lambdaAtom = lambdaVar <|> lambdaLam <|> paren -- <|> lambdaApp
 
 --lambdaVar :: GenParser Char st LambdaTerm
 lambdaVar = [Var v | v <- variableName]
 
 --lambdaApp :: GenParser Char st LambdaTerm
-lambdaApp = [App m n | m <- lambdaTerm, n <- lambdaTerm]
+--lambdaApp = [App m n | m <- lambdaTerm, n <- lambdaTerm]
 
 --lambdaLam :: GenParser Char st LambdaTerm
 lambdaLam = [Lam v t | _ <- string "\\"
@@ -38,8 +40,11 @@ lambdaLam = [Lam v t | _ <- string "\\"
 paren = between (string "(") (string ")") lambdaTerm
 
 variableName :: GenParser Char st String
-variableName = [v:primes | v      <- letter
-						 , primes <- many (char '\'')]
+--variableName = [v:primes | v      <- letter
+--						 , primes <- many (char '\'')]
+variableName = [v:s++primes | v      <- letter
+                            , s      <- many alphaNum
+						    , primes <- many (char '\'')]
 --variable = [x:xs | x <- lower, xs <- many alphaNum]
 
 
@@ -61,6 +66,19 @@ lambdaLamSimpleBound = TestCase (assertEqual "lambda-abstraction"
 lambdaLamSimpleUnbound = TestCase (assertEqual "lambda-abstraction"
 						(Right $ Lam "x" (Var "y"))
 						(runParser lambdaLam () "" "\\x.y"))
+
+lambdaExprT1 = TestCase (assertEqual "lambdaExprT1"
+						(Right $ Lam "x" (App (Var "y") (Lam "z" (App (Var "z") (Var "yx")))))
+						(runParser lambdaTerm () "" "\\x.(y \\z.z yx)"))
+lambdaExprT2 = TestCase (assertEqual "lambdaExprT2"
+						(Right $ Lam "x" (App (Var "y") (Lam "z" (App (App (Var "z") (Var "y")) (Var "x")))))
+						(runParser lambdaTerm () "" "\\x.(y \\z.z y x)"))
+lambdaExprT3 = TestCase (assertEqual "lambdaExprT3"
+						(Right $ Lam "x" (App (Var "y") (Lam "z" (App (Var "z") (App (Var "y") (Var "x"))))))
+						(runParser lambdaTerm () "" "\\x.(y \\z.z (y x))"))
+lambdaExprT4 = TestCase (assertEqual "lambdaExprT4"
+						(Right $ App (Lam "x" (Lam "y" (Lam "z" (Var "z")))) (Lam "u" (Var "v")))
+						(runParser lambdaTerm () "" "(\\x.\\y.\\z.z) \\u.v"))
 
 stubTest = TestCase (assertEqual "Unimplemented" True False)
 
