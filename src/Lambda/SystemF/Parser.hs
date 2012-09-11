@@ -2,7 +2,9 @@
 module Lambda.SystemF.Parser where
 
 import Text.ParserCombinators.Parsec
+
 import Lambda.SystemF.Term
+import Lambda.CommonUtils
 
 parseTerm :: String -> Either ParseError LambdaTerm
 parseTerm _ = fail "Not implemented"
@@ -27,23 +29,16 @@ lambdaVar = [Var v | v <- variableName]
 lambdaApp = [App m n | m <- lambdaTerm, n <- lambdaTerm]
 lambdaTApp = [TApp m t | m <- lambdaTerm
                        , t <- lambdaType]
-lambdaLam = [Lam v t m | _ <- string "\\"
+lambdaLam = [Lam v t m | _ <- lambdaSym
                        , v <- variableName
                        , _ <- string ":"
                        , t <- lambdaType
                        , _ <- string "."
                        , m <- lambdaTerm]
-lambdaTLam = [TLam v t | _ <- string "\\"
+lambdaTLam = [TLam v t | _ <- lambdaSym
                        , v <- typeVariableName
                        , _ <- string "."
                        , t <- lambdaTerm]
 
-variableName :: GenParser Char st String
-variableName = [v:primes | v      <- letter
-						             , primes <- many (char '\'')]
-
-typeVariableName :: GenParser Char st String
-typeVariableName = [v:primes | v      <- letter
-						                 , primes <- many (char '\'')]
-
+lambdaSym = string "\\"
 paren = between (string "(") (string ")") lambdaTerm

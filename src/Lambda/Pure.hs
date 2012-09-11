@@ -3,6 +3,7 @@ module Lambda.Pure where
 import Lambda.Pure.Term
 import Lambda.Pure.Combinator
 import Lambda.Pure.Parser
+import Lambda.Pure.Test
 
 -- f = (\x.\y.x)(\z.z)
 f = App (Lam "x" $ Lam "y" $ Var "x") (Lam "z" $ Var "z")
