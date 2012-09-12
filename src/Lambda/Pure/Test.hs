@@ -44,7 +44,7 @@ lambdaExprT4 = TestCase (assertEqual "lambdaExprT4"
 						(Right $ App (Lam "x" (Lam "y" (Lam "z" (Var "z")))) (Lam "u" (Var "v")))
 						(runParser lambdaTerm () "" "(\\x.\\y.\\z.z) \\u.v"))
 
-stubTest = TestCase (assertEqual "Unimplemented" True False)
+stubTest = TestCase (assertEqual "Stub test case" True False)
 
 lambdaVarTests = TestList [lambdaVarSimple,
 							lambdaVarSimplePrime,
@@ -52,7 +52,9 @@ lambdaVarTests = TestList [lambdaVarSimple,
 lambdaAppTests = TestList [TestLabel "" stubTest]
 lambdaLamTests = TestList [TestLabel "" lambdaLamSimpleBound,
 						   TestLabel "" lambdaLamSimpleUnbound]
-lambdaTermTests = TestList [TestLabel "" stubTest]
+lambdaTermTests = TestList [TestLabel "" stubTest,
+							lambdaExprT1, lambdaExprT2,
+							lambdaExprT3, lambdaExprT4]
 
 tests = TestList [TestLabel "lambdaVar" lambdaVarTests,
 				  TestLabel "lambdaApp" lambdaAppTests,
