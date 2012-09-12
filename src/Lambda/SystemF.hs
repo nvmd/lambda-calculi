@@ -4,6 +4,7 @@ import Lambda.SystemF.Term
 import Lambda.SystemF.Parser
 import Lambda.SystemF.Combinator
 import Lambda.SystemF.TypeChecking
+import Lambda.SystemF.Test
 
 -- \lambda2, polymorphic typed, second-order typed, second-order polymorphic typed, system F
 

@@ -7,12 +7,14 @@ import Lambda.SystemF.Term
 import Lambda.CommonUtils
 
 parseTerm :: String -> Either ParseError LambdaTerm
-parseTerm _ = fail "Not implemented"
+parseTerm = fail "Not implemented"
 
 parseType :: String -> Either ParseError Type
-parseType _ = fail "Not implemented"
+parseType = runParser lambdaType () ""
 
-lambdaType = lambdaTVar <|> lambdaArrow <|> lambdaForAll
+lambdaType = lambdaTypeAtom `chainr1` (do {string "->"; return (Arrow)})
+
+lambdaTypeAtom = lambdaTVar <|> lambdaForAll -- <|> lambdaArrow
 lambdaTVar = [TVar v | v <- typeVariableName]
 lambdaArrow = [Arrow t s | t <- lambdaType
 						             , _ <- string "->"
@@ -23,6 +25,19 @@ lambdaForAll = [ForAll v t | _ <- string "("
                            , _ <- string "->"
                            , t <- lambdaType]
 
+--lambdaTerm = lambdaAtom `chainl1` (do {
+--                                         string " " <|> lambdaSym;
+--                                         do {v <- typeVariable;
+--                                                  string ".";
+--                                             t <- lambdaTerm;
+--                                             return (TApp)}
+--                                     <|> do {v <- variableName;
+--                                                  string ":";
+--                                             t <- lambdaType;
+--                                                  string ".";
+--                                             m <- lambdaTerm;
+--                                             return }
+--                                   })
 lambdaTerm = lambdaVar <|> lambdaApp <|> lambdaTApp 
           <|> lambdaLam <|> lambdaTLam <|> paren
 lambdaVar = [Var v | v <- variableName]
