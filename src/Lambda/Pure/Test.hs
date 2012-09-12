@@ -31,18 +31,24 @@ lambdaLamSimpleUnbound = TestCase (assertEqual "lambda-abstraction"
 						(Right $ Lam "x" (Var "y"))
 						(runParser lambdaLam () "" "\\x.y"))
 
+lambdaExprT0 = TestCase (assertEqual "lambdaExprT0"
+						(Right $ (App (Var "x") (Var "y")))
+						(parseTerm "x y"))
+lambdaExprT0' = TestCase (assertEqual "lambdaExprT0'"
+						(Right $ (App (Var "x") (App (Var "z") (Var "y"))))
+						(parseTerm "x (z y)"))
 lambdaExprT1 = TestCase (assertEqual "lambdaExprT1"
 						(Right $ Lam "x" (App (Var "y") (Lam "z" (App (Var "z") (Var "yx")))))
-						(runParser lambdaTerm () "" "\\x.(y \\z.z yx)"))
+						(parseTerm "\\x.(y \\z.z yx)"))
 lambdaExprT2 = TestCase (assertEqual "lambdaExprT2"
 						(Right $ Lam "x" (App (Var "y") (Lam "z" (App (App (Var "z") (Var "y")) (Var "x")))))
-						(runParser lambdaTerm () "" "\\x.(y \\z.z y x)"))
+						(parseTerm "\\x.(y \\z.z y x)"))
 lambdaExprT3 = TestCase (assertEqual "lambdaExprT3"
 						(Right $ Lam "x" (App (Var "y") (Lam "z" (App (Var "z") (App (Var "y") (Var "x"))))))
-						(runParser lambdaTerm () "" "\\x.(y \\z.z (y x))"))
+						(parseTerm "\\x.(y \\z.z (y x))"))
 lambdaExprT4 = TestCase (assertEqual "lambdaExprT4"
 						(Right $ App (Lam "x" (Lam "y" (Lam "z" (Var "z")))) (Lam "u" (Var "v")))
-						(runParser lambdaTerm () "" "(\\x.\\y.\\z.z) \\u.v"))
+						(parseTerm "(\\x.\\y.\\z.z) \\u.v"))
 
 stubTest = TestCase (assertEqual "Stub test case" True False)
 
@@ -53,6 +59,7 @@ lambdaAppTests = TestList [TestLabel "" stubTest]
 lambdaLamTests = TestList [TestLabel "" lambdaLamSimpleBound,
 						   TestLabel "" lambdaLamSimpleUnbound]
 lambdaTermTests = TestList [TestLabel "" stubTest,
+							lambdaExprT0, lambdaExprT0',
 							lambdaExprT1, lambdaExprT2,
 							lambdaExprT3, lambdaExprT4]
 
