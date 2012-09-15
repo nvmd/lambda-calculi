@@ -34,6 +34,15 @@ lambdaLamSimpleUnbound = TestCase (assertEqual "lambda-abstraction"
 lambdaExprT0 = TestCase (assertEqual "lambdaExprT0"
 						(Right $ (App (Var "x") (Var "y")))
 						(parseTerm "x y"))
+lambdaExprT00 = TestCase (assertEqual "lambdaExprT00"
+						(Right $ (App (Var "x") (Var "y")))
+						(parseTerm "x (y)"))
+lambdaExprT00' = TestCase (assertEqual "lambdaExprT00'"
+						(Right $ (App (Var "x") (Var "y")))
+						(parseTerm "(x) (y)"))
+lambdaExprT00'' = TestCase (assertEqual "lambdaExprT00''"
+						(Right $ (App (Var "x") (Var "y")))
+						(parseTerm "((x) (y))"))
 lambdaExprT0' = TestCase (assertEqual "lambdaExprT0'"
 						(Right $ (App (Var "x") (App (Var "z") (Var "y"))))
 						(parseTerm "x (z y)"))
@@ -59,7 +68,9 @@ lambdaAppTests = TestList [TestLabel "" stubTest]
 lambdaLamTests = TestList [TestLabel "" lambdaLamSimpleBound,
 						   TestLabel "" lambdaLamSimpleUnbound]
 lambdaTermTests = TestList [TestLabel "" stubTest,
-							lambdaExprT0, lambdaExprT0',
+							lambdaExprT0, lambdaExprT00,
+							lambdaExprT00', lambdaExprT00'',
+							lambdaExprT0',
 							lambdaExprT1, lambdaExprT2,
 							lambdaExprT3, lambdaExprT4]
 

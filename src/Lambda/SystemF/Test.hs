@@ -30,6 +30,21 @@ lambdaTypeT5 = TestCase (assertEqual "lambdaTypeT5"
                         (Right $ ForAll "a" (Arrow (TVar "a") (TVar "a")))
                         (parseType "(a:*)->a->a"))
 
+lambdaExprT0 = TestCase (assertEqual "lambdaExprT0"
+                        (Right $ (App (Var "x") (Var "y")))
+                        (parseTerm "x y"))
+lambdaExprT00 = TestCase (assertEqual "lambdaExprT00"
+                        (Right $ (App (Var "x") (Var "y")))
+                        (parseTerm "x (y)"))
+lambdaExprT00' = TestCase (assertEqual "lambdaExprT00'"
+                        (Right $ (App (Var "x") (Var "y")))
+                        (parseTerm "(x) (y)"))
+lambdaExprT00'' = TestCase (assertEqual "lambdaExprT00''"
+                        (Right $ (App (Var "x") (Var "y")))
+                        (parseTerm "((x) (y))"))
+lambdaExprT0' = TestCase (assertEqual "lambdaExprT0'"
+                        (Right $ (App (Var "x") (App (Var "z") (Var "y"))))
+                        (parseTerm "x (z y)"))
 -- id = \(a:*).\(x:a).x
 lambdaTermT1 = TestCase (assertEqual "lambdaTermT1"
                         (Right $ TLam "a" (Lam "x" (TVar "a") (Var "x")))
@@ -38,8 +53,8 @@ lambdaTermT2 = TestCase (assertEqual "lambdaTermT2"
                         (Right $ Lam "x" (TVar "a") (Var "x"))
                         (parseTerm "\\(x:a).x"))
 lambdaTermT3 = TestCase (assertEqual "lambdaTermT3"
-                        (Right $ App (Var "x") (Var "y"))
-                        (parseTerm "x y"))
+                        (Right $ TApp (TLam "a" (Lam "x" (TVar "a") (Var "x"))) (TVar "Int"))
+                        (parseTerm "(\\(a:*).\\(x:a).x)(Int)"))
 lambdaTermT1' = TestCase (assertEqual "lambdaTermT1'"
                         (Right $ TLam "a" (Lam "x" (TVar "a") (Var "x")))
                         (runParser lambdaLambda () "" "\\(a:*).\\(x:a).x"))
@@ -47,6 +62,9 @@ lambdaTermT1' = TestCase (assertEqual "lambdaTermT1'"
 stubTest = TestCase (assertEqual "Stub test case" True False)
 
 lambdaTermTests = TestList [TestLabel "" stubTest,
+                            lambdaExprT0, lambdaExprT00,
+                            lambdaExprT00', lambdaExprT00'',
+                            lambdaExprT0',
                             lambdaTermT1, lambdaTermT2,
                             lambdaTermT3,
                             lambdaTermT1']
