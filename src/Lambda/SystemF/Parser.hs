@@ -7,7 +7,7 @@ import Lambda.SystemF.Term
 import Lambda.CommonUtils
 
 parseTerm :: String -> Either ParseError LambdaTerm
-parseTerm = fail "Not implemented"
+parseTerm = runParser lambdaTerm () ""
 
 parseType :: String -> Either ParseError Type
 parseType = runParser lambdaType () ""
@@ -17,43 +17,58 @@ lambdaType = lambdaTypeAtom `chainr1` (do {string "->"; return (Arrow)})
 lambdaTypeAtom = lambdaTVar <|> lambdaForAll -- <|> lambdaArrow
 lambdaTVar = [TVar v | v <- typeVariableName]
 lambdaArrow = [Arrow t s | t <- lambdaType
-						             , _ <- string "->"
-						             , s <- lambdaType]
+                         , _ <- string "->"
+                         , s <- lambdaType]
 lambdaForAll = [ForAll v t | _ <- string "("
-						               , v <- typeVariableName
-						               , _ <- string ":*)"
+                           , v <- typeVariableName
+                           , _ <- string ":*)"
                            , _ <- string "->"
                            , t <- lambdaType]
 
---lambdaTerm = lambdaAtom `chainl1` (do {
---                                         string " " <|> lambdaSym;
---                                         do {v <- typeVariable;
---                                                  string ".";
---                                             t <- lambdaTerm;
---                                             return (TApp)}
---                                     <|> do {v <- variableName;
---                                                  string ":";
---                                             t <- lambdaType;
---                                                  string ".";
---                                             m <- lambdaTerm;
---                                             return }
---                                   })
-lambdaTerm = lambdaVar <|> lambdaApp <|> lambdaTApp 
-          <|> lambdaLam <|> lambdaTLam <|> paren
+--lambdaTerm = lambdaVar <|> lambdaApp <|> lambdaTApp
+--          <|> lambdaLam <|> lambdaTLam <|> paren
+lambdaTerm = lambdaAtom `chainl1` (do {string " " <|> lambdaSym; return (App)})
+
+lambdaAtom = lambdaVar
+          <|> lambdaLambda
+--          <|> try (lambdaLam) <|> try (lambdaTLam)
+          <|> lambdaTApp <|> paren
+
 lambdaVar = [Var v | v <- variableName]
 lambdaApp = [App m n | m <- lambdaTerm, n <- lambdaTerm]
 lambdaTApp = [TApp m t | m <- lambdaTerm
                        , t <- lambdaType]
-lambdaLam = [Lam v t m | _ <- lambdaSym
-                       , v <- variableName
-                       , _ <- string ":"
-                       , t <- lambdaType
-                       , _ <- string "."
-                       , m <- lambdaTerm]
-lambdaTLam = [TLam v t | _ <- lambdaSym
-                       , v <- typeVariableName
-                       , _ <- string "."
-                       , t <- lambdaTerm]
+--lambdaLam = [Lam v t m | _ <- lambdaSym
+--                       , _ <- string "("
+--                       , v <- variableName
+--                       , _ <- string ":"
+--                       , t <- lambdaType
+--                       , _ <- string ")."
+--                       , m <- lambdaTerm]
+--lambdaTLam = [TLam v t | _ <- lambdaSym
+--                       , _ <- string "("
+--                       , v <- typeVariableName
+--                       , _ <- string ":*)."
+--                    -- same as the lines above
+--                    -- , v <- between (string "\\(") (string ":*).") typeVariableName
+--                       , t <- lambdaTerm]
+
+lambdaLambda = do {
+                    lambdaLambdaPrefix; -- Lam and TLam common prefix parser
+                    -- Lam and TLam suffixes parsers
+                    try (lambdaLamSuffix) <|> try (lambdaTLamSuffix);
+                }
+lambdaLambdaPrefix = do { lambdaSym;
+                          string "(";
+                      }
+lambdaLamSuffix  = [Lam v t m | v <- variableName
+                              , _ <- string ":"
+                              , t <- lambdaType
+                              , _ <- string ")."
+                              , m <- lambdaTerm]
+lambdaTLamSuffix = [TLam v t | v <- typeVariableName
+                             , _ <- string ":*)."
+                             , t <- lambdaTerm]
 
 lambdaSym = string "\\"
 paren = between (string "(") (string ")") lambdaTerm
