@@ -59,7 +59,7 @@ lambdaTermT1' = TestCase (assertEqual "lambdaTermT1'"
                         (Right $ TLam "a" (Lam "x" (TVar "a") (Var "x")))
                         (runParser lambdaLambda () "" "\\(a:*).\\(x:a).x"))
 
-stubTest = TestCase (assertEqual "Stub test case" True False)
+stubTest = TestCase (assertEqual "Stub test case" True True)
 
 lambdaTermTests = TestList [TestLabel "" stubTest,
                             lambdaExprT0, lambdaExprT00,

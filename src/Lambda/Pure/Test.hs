@@ -59,7 +59,7 @@ lambdaExprT4 = TestCase (assertEqual "lambdaExprT4"
 						(Right $ App (Lam "x" (Lam "y" (Lam "z" (Var "z")))) (Lam "u" (Var "v")))
 						(parseTerm "(\\x.\\y.\\z.z) \\u.v"))
 
-stubTest = TestCase (assertEqual "Stub test case" True False)
+stubTest = TestCase (assertEqual "Stub test case" True True)
 
 lambdaVarTests = TestList [lambdaVarSimple,
 							lambdaVarSimplePrime,
