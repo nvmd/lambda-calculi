@@ -38,20 +38,6 @@ lambdaVar = [Var v | v <- variableName]
 lambdaApp = [App m n | m <- lambdaTerm, n <- lambdaTerm]
 lambdaTApp = [TApp m t | m <- lambdaTerm
                        , t <- lambdaType]
---lambdaLam = [Lam v t m | _ <- lambdaSym
---                       , _ <- string "("
---                       , v <- variableName
---                       , _ <- string ":"
---                       , t <- lambdaType
---                       , _ <- string ")."
---                       , m <- lambdaTerm]
---lambdaTLam = [TLam v t | _ <- lambdaSym
---                       , _ <- string "("
---                       , v <- typeVariableName
---                       , _ <- string ":*)."
---                    -- same as the lines above
---                    -- , v <- between (string "\\(") (string ":*).") typeVariableName
---                       , t <- lambdaTerm]
 
 lambdaLambda = do {
                     lambdaLambdaPrefix; -- Lam and TLam common prefix parser
