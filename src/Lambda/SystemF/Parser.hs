@@ -27,8 +27,9 @@ lambdaForAll = [ForAll v t | _ <- string "("
 
 --lambdaTerm = lambdaVar <|> lambdaApp <|> lambdaTApp
 --          <|> lambdaLam <|> lambdaTLam <|> paren
-lambdaTerm = lambdaAtom `chainl1` (do {string " " <|> lambdaSym; return (App)})
-
+lambdaTerm = lambdaAtom `chainl1` (do { string " " <|> lambdaSym;
+                                             return (App)
+                                      })
 lambdaAtom = lambdaVar
           <|> lambdaLambda
 --          <|> try (lambdaLam) <|> try (lambdaTLam)
@@ -36,7 +37,8 @@ lambdaAtom = lambdaVar
 
 lambdaVar = [Var v | v <- variableName]
 lambdaApp = [App m n | m <- lambdaTerm, n <- lambdaTerm]
-lambdaTApp = [TApp m t | m <- lambdaTerm
+lambdaTApp = [TApp m t | m <- lambdaTLam
+                       , _ <- many (string " ")
                        , t <- lambdaType]
 
 lambdaLambda = do {
@@ -55,6 +57,7 @@ lambdaLamSuffix  = [Lam v t m | v <- variableName
 lambdaTLamSuffix = [TLam v t | v <- typeVariableName
                              , _ <- string ":*)."
                              , t <- lambdaTerm]
+lambdaTLam = do { lambdaLambdaPrefix; lambdaTLamSuffix; }
 
 lambdaSym = string "\\"
 paren = between (string "(") (string ")") lambdaTerm
