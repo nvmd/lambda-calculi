@@ -16,10 +16,8 @@ lambdaTerm = lambdaAtom `chainl1` (do { string " " <|> lambdaSym;
                                         return (App)
                                       })
 lambdaAtom = lambdaVar
---          <|> try (lambdaTApp)
+          <|> try (lambdaTLamApp)
           <|> lambdaLambda
---          <|> try (lambdaLam) <|> try (lambdaTLam)
-          <|> lambdaTApp
           <|> paren
 
 lambdaVar = [Var v | v <- variableName]
@@ -46,11 +44,13 @@ lambdaTLamSuffix = [TLam v t | v <- typeVariableName
                              , t <- lambdaTerm]
 lambdaTLam = do { lambdaLambdaPrefix; lambdaTLamSuffix; }
 
-lambdaTLamApp = [TApp (TLam v m) t | _ <- lambdaSym
+lambdaTLamApp = [TApp (TLam v m) t | _ <- string "("
+                                   , _ <- lambdaSym
                                    , _ <- string "("
                                    , v <- typeVariableName
                                    , _ <- string ":*)."
                                    , m <- lambdaTerm
+                                   , _ <- string ")"
                                    , t <- lambdaType]
 
 lambdaSym = string "\\"

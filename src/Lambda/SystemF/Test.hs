@@ -57,6 +57,9 @@ lambdaExprT00' = TestCase (assertEqual "lambdaExprT00'"
 lambdaExprT00'' = TestCase (assertEqual "lambdaExprT00''"
                         (Right $ (App (Var "x") (Var "y")))
                         (parseTerm "((x) (y))"))
+lambdaExprT000 = TestCase (assertEqual "lambdaExprT000"
+                        (Right $ (App (Var "x") (Var "y")))
+                        (parseTerm "(x)(y)"))
 lambdaExprT0' = TestCase (assertEqual "lambdaExprT0'"
                         (Right $ (App (Var "x") (App (Var "z") (Var "y"))))
                         (parseTerm "x (z y)"))
@@ -70,6 +73,11 @@ lambdaTermT2 = TestCase (assertEqual "lambdaTermT2"
 lambdaTermT3 = TestCase (assertEqual "lambdaTermT3"
                         (Right $ TApp (TLam "a" (Lam "x" (TVar "a") (Var "x"))) (TVar "Int"))
                         (parseTerm "(\\(a:*).\\(x:a).x)(Int)"))
+lambdaTermT4 = TestCase (assertEqual "lambdaTermT4"
+                        (Right $ App (TLam "a" (Lam "x" (TVar "a") (Var "x")))
+                                     (Lam "y" (TVar "b") (App (Var "x") (Var "y")))
+                        )
+                        (parseTerm "(\\(a:*).\\(x:a).x)(\\(y:b).(x y))"))
 lambdaTermT1' = TestCase (assertEqual "lambdaTermT1'"
                         (Right $ TLam "a" (Lam "x" (TVar "a") (Var "x")))
                         (runParser lambdaLambda () "" "\\(a:*).\\(x:a).x"))
@@ -79,9 +87,10 @@ stubTest = TestCase (assertEqual "Stub test case" True True)
 lambdaTermTests = TestList [TestLabel "" stubTest,
                             lambdaExprT0, lambdaExprT00,
                             lambdaExprT00', lambdaExprT00'',
+                            lambdaExprT000,
                             lambdaExprT0',
                             lambdaTermT1, lambdaTermT2,
-                            lambdaTermT3,
+                            lambdaTermT3, lambdaTermT4,
                             lambdaTermT1']
 
 lambdaTypeTests = TestList [TestLabel "" stubTest,

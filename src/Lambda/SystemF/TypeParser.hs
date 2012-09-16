@@ -16,13 +16,13 @@ lambdaType = lambdaTypeAtom `chainr1` (do { spaces;
                                           })
 
 lambdaTypeAtom = lambdaTVar
---              <|> lambdaTVarType
+              <|> lambdaTVarType
               <|> (try lambdaForAll)
               <|> (between (string "(")
                            (string ")")
                             lambdaType)
            -- <|> lambdaArrow
---lambdaTVarType = [TVar v | v <- typeName]
+lambdaTVarType = [TVar v | v <- typeName]
 lambdaTVar = [TVar v | v <- typeVariableName]
 --lambdaArrow = [Arrow t s | t <- lambdaType
 --                         , _ <- string "->"
