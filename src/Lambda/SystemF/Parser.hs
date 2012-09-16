@@ -12,13 +12,17 @@ parseTerm = runParser lambdaTerm () ""
 parseType :: String -> Either ParseError Type
 parseType = runParser lambdaType () ""
 
-lambdaType = lambdaTypeAtom `chainr1` (do {string "->"; return (Arrow)})
+lambdaType = lambdaTypeAtom `chainr1` (do { many (string " ");
+                                            string "->";
+                                            many (string " ");
+                                            return (Arrow)
+                                          })
 
 lambdaTypeAtom = lambdaTVar <|> lambdaForAll -- <|> lambdaArrow
 lambdaTVar = [TVar v | v <- typeVariableName]
-lambdaArrow = [Arrow t s | t <- lambdaType
-                         , _ <- string "->"
-                         , s <- lambdaType]
+--lambdaArrow = [Arrow t s | t <- lambdaType
+--                         , _ <- string "->"
+--                         , s <- lambdaType]
 lambdaForAll = [ForAll v t | _ <- string "("
                            , v <- typeVariableName
                            , _ <- string ":*)"
