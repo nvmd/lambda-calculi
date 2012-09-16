@@ -58,6 +58,21 @@ lambdaExprT3 = TestCase (assertEqual "lambdaExprT3"
 lambdaExprT4 = TestCase (assertEqual "lambdaExprT4"
 						(Right $ App (Lam "x" (Lam "y" (Lam "z" (Var "z")))) (Lam "u" (Var "v")))
 						(parseTerm "(\\x.\\y.\\z.z) \\u.v"))
+lambdaExprT5 = TestCase (assertEqual "lambdaExprT5"
+						(Right $ Var "x")
+						(parseTerm "x"))
+lambdaExprT6 = TestCase (assertEqual "lambdaExprT6"
+						(Right $ Var "x")
+						(parseTerm "x "))
+lambdaExprT7 = TestCase (assertEqual "lambdaExprT7"
+						(Right $ Var "x")
+						(parseTerm "  x"))
+lambdaExprT8 = TestCase (assertEqual "lambdaExprT8"
+						(Right $ App (Var "x") (Var "y"))
+						(parseTerm "x  y"))
+lambdaExprT9 = TestCase (assertEqual "lambdaExprT9"
+						(Right $ App (Var "x") (Var "y"))
+						(parseTerm " x  y"))
 
 stubTest = TestCase (assertEqual "Stub test case" True True)
 
@@ -72,7 +87,10 @@ lambdaTermTests = TestList [TestLabel "" stubTest,
 							lambdaExprT00', lambdaExprT00'',
 							lambdaExprT0',
 							lambdaExprT1, lambdaExprT2,
-							lambdaExprT3, lambdaExprT4]
+							lambdaExprT3, lambdaExprT4,
+							lambdaExprT5, lambdaExprT6,
+							lambdaExprT7, lambdaExprT8,
+							lambdaExprT9]
 
 tests = TestList [TestLabel "lambdaVar" lambdaVarTests,
 				  TestLabel "lambdaApp" lambdaAppTests,

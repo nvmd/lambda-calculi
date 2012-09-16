@@ -16,9 +16,14 @@ parseTerm = runParser lambdaTerm () ""
 -- P: '('T')'
 
 --lambdaTerm :: GenParser Char st LambdaTerm
-lambdaTerm = lambdaAtom `chainl1` (do {string " " <|> lambdaSym; return (App)})
+lambdaTerm = lambdaAtom `chainl1` (do { many1 (string " ")
+                                        <|> (manyTill (string " ") lambdaSym);
+                                        return (App)
+                                      })
 
-lambdaAtom = lambdaVar <|> lambdaLam <|> paren -- <|> lambdaApp
+lambdaAtom = do { skipMany (string " ");
+                  lambdaVar <|> lambdaLam <|> paren; -- <|> lambdaApp
+                }
 
 --lambdaVar :: GenParser Char st LambdaTerm
 lambdaVar = [Var v | v <- variableName]
