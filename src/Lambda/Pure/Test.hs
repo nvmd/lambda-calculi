@@ -43,6 +43,9 @@ lambdaExprT00' = TestCase (assertEqual "lambdaExprT00'"
 lambdaExprT00'' = TestCase (assertEqual "lambdaExprT00''"
 						(Right $ (App (Var "x") (Var "y")))
 						(parseTerm "((x) (y))"))
+lambdaExprT000 = TestCase (assertEqual "lambdaExprT000"
+                        (Right $ (App (Var "x") (Var "y")))
+                        (parseTerm "(x)(y)"))
 lambdaExprT0' = TestCase (assertEqual "lambdaExprT0'"
 						(Right $ (App (Var "x") (App (Var "z") (Var "y"))))
 						(parseTerm "x (z y)"))
@@ -85,6 +88,7 @@ lambdaLamTests = TestList [TestLabel "" lambdaLamSimpleBound,
 lambdaTermTests = TestList [TestLabel "" stubTest,
 							lambdaExprT0, lambdaExprT00,
 							lambdaExprT00', lambdaExprT00'',
+							lambdaExprT000,
 							lambdaExprT0',
 							lambdaExprT1, lambdaExprT2,
 							lambdaExprT3, lambdaExprT4,
