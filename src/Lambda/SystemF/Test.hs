@@ -2,6 +2,7 @@ module Lambda.SystemF.Test where
 
 import Lambda.SystemF.Term
 import Lambda.SystemF.Parser
+import Lambda.SystemF.TypeParser
 
 import Text.ParserCombinators.Parsec
 
@@ -35,6 +36,14 @@ lambdaTypeT6 = TestCase (assertEqual "lambdaTypeT6"
 lambdaTypeT7 = TestCase (assertEqual "lambdaTypeT7"
                         (Right $ Arrow (TVar "a") (Arrow (TVar "b") (TVar "c")))
                         (parseType "a -> (b -> c)"))
+-- id: (a:*)->a->a
+lambdaTypeT8 = TestCase (assertEqual "lambdaTypeT8"
+                        (Right $ ForAll "a" (Arrow (TVar "a") (TVar "a")))
+                        (parseType "(a:*)->a -> a"))
+-- id: (a:*)->a->a
+lambdaTypeT9 = TestCase (assertEqual "lambdaTypeT9"
+                        (Right $ ForAll "a" (Arrow (TVar "a") (TVar "a")))
+                        (parseType "(a:*) -> a -> a"))
 
 lambdaExprT0 = TestCase (assertEqual "lambdaExprT0"
                         (Right $ (App (Var "x") (Var "y")))
@@ -79,7 +88,8 @@ lambdaTypeTests = TestList [TestLabel "" stubTest,
                             lambdaTypeT1, lambdaTypeT2,
                             lambdaTypeT3, lambdaTypeT4,
                             lambdaTypeT5, lambdaTypeT6,
-                            lambdaTypeT7]
+                            lambdaTypeT7, lambdaTypeT8,
+                            lambdaTypeT9]
 
 tests = TestList [TestLabel "lambdaTerm" lambdaTermTests,
                     TestLabel "lambdaType" lambdaTypeTests]

@@ -2,6 +2,7 @@ module Lambda.SystemF where
 
 import Lambda.SystemF.Term
 import Lambda.SystemF.Parser
+import Lambda.SystemF.TypeParser
 import Lambda.SystemF.Combinator
 import Lambda.SystemF.TypeChecking
 import Lambda.SystemF.Test
