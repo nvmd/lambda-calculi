@@ -18,7 +18,12 @@ lambdaType = lambdaTypeAtom `chainr1` (do { many (string " ");
                                             return (Arrow)
                                           })
 
-lambdaTypeAtom = lambdaTVar <|> lambdaForAll -- <|> lambdaArrow
+lambdaTypeAtom = lambdaTVar
+              <|> (try lambdaForAll)
+              <|> (between (string "(")
+                           (string ")")
+                            lambdaType)
+           -- <|> lambdaArrow
 lambdaTVar = [TVar v | v <- typeVariableName]
 --lambdaArrow = [Arrow t s | t <- lambdaType
 --                         , _ <- string "->"
@@ -32,12 +37,14 @@ lambdaForAll = [ForAll v t | _ <- string "("
 --lambdaTerm = lambdaVar <|> lambdaApp <|> lambdaTApp
 --          <|> lambdaLam <|> lambdaTLam <|> paren
 lambdaTerm = lambdaAtom `chainl1` (do { string " " <|> lambdaSym;
-                                             return (App)
+                                        return (App)
                                       })
 lambdaAtom = lambdaVar
+--          <|> try (lambdaTApp)
           <|> lambdaLambda
 --          <|> try (lambdaLam) <|> try (lambdaTLam)
-          <|> lambdaTApp <|> paren
+          <|> lambdaTApp
+          <|> paren
 
 lambdaVar = [Var v | v <- variableName]
 lambdaApp = [App m n | m <- lambdaTerm, n <- lambdaTerm]

@@ -29,6 +29,12 @@ lambdaTypeT4 = TestCase (assertEqual "lambdaTypeT4"
 lambdaTypeT5 = TestCase (assertEqual "lambdaTypeT5"
                         (Right $ ForAll "a" (Arrow (TVar "a") (TVar "a")))
                         (parseType "(a:*)->a->a"))
+lambdaTypeT6 = TestCase (assertEqual "lambdaTypeT6"
+                        (Right $ Arrow (TVar "a") (Arrow (TVar "b") (TVar "c")))
+                        (parseType "a->(b->c)"))
+lambdaTypeT7 = TestCase (assertEqual "lambdaTypeT7"
+                        (Right $ Arrow (TVar "a") (Arrow (TVar "b") (TVar "c")))
+                        (parseType "a -> (b -> c)"))
 
 lambdaExprT0 = TestCase (assertEqual "lambdaExprT0"
                         (Right $ (App (Var "x") (Var "y")))
@@ -72,7 +78,8 @@ lambdaTermTests = TestList [TestLabel "" stubTest,
 lambdaTypeTests = TestList [TestLabel "" stubTest,
                             lambdaTypeT1, lambdaTypeT2,
                             lambdaTypeT3, lambdaTypeT4,
-                            lambdaTypeT5]
+                            lambdaTypeT5, lambdaTypeT6,
+                            lambdaTypeT7]
 
 tests = TestList [TestLabel "lambdaTerm" lambdaTermTests,
                     TestLabel "lambdaType" lambdaTypeTests]
