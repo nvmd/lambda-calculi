@@ -1,6 +1,7 @@
 module Lambda.SystemF.Term where
 
 import Data.List
+import qualified Lambda.Pure.Term as Pure
 
 -- à la Church
 type Sym = String
@@ -29,7 +30,7 @@ data Type = TVar Sym
 instance Show Type where
     show (TVar sym)     = sym
     show (Arrow t1 t2)  = "(" ++ show t1 ++ "->" ++ show t2 ++ ")"
-    show (ForAll sym t) = "(" ++ sym ++ ":" ++ show t ++ ")"
+    show (ForAll sym t) = "(" ++ "(" ++ sym ++ ":*)->" ++ show t ++ ")"
 
 -- contexts
 newtype Env = Env [(Sym, Type)]
@@ -111,3 +112,10 @@ alphaConversion (App p q)  x y = App (alphaConversion p x y) (alphaConversion q 
 alphaConversion (TApp p t) x y = TApp (alphaConversion p x y) t
 alphaConversion m@(Var v) x y | v == x    = Var y
                               | otherwise = m
+
+erase :: LambdaTerm -> Pure.LambdaTerm
+erase (Var x) = Pure.Var x
+erase (Lam x t m) = Pure.Lam x $ erase m
+erase (App m n) = Pure.App (erase m) (erase n)
+erase (TLam x m) = erase m
+erase (TApp m t) = erase m
