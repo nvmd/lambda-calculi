@@ -4,6 +4,9 @@ import Lambda.SystemF.Term
 import Lambda.SystemF.Parser
 import Lambda.SystemF.TypeParser
 
+import Lambda.SystemF.TypeChecking
+import Lambda.SystemF.Combinator
+
 import Text.ParserCombinators.Parsec
 
 import Test.HUnit
@@ -82,6 +85,10 @@ lambdaTermT1' = TestCase (assertEqual "lambdaTermT1'"
                         (Right $ TLam "a" (Lam "x" (TVar "a") (Var "x")))
                         (runParser lambdaLambda () "" "\\(a:*).\\(x:a).x"))
 
+typeCheckingT1 = TestCase (assertEqual "typeCheckingT1"
+                           Trues
+                          (checkTermType iComb emptyEnv iCombType))
+
 stubTest = TestCase (assertEqual "Stub test case" True True)
 
 lambdaTermTests = TestList [TestLabel "" stubTest,
@@ -100,8 +107,12 @@ lambdaTypeTests = TestList [TestLabel "" stubTest,
                             lambdaTypeT7, lambdaTypeT8,
                             lambdaTypeT9]
 
+typeCheckingTests = TestList [TestLabel "" stubTest,
+                              typeCheckingT1]
+
 tests = TestList [TestLabel "lambdaTerm" lambdaTermTests,
-                    TestLabel "lambdaType" lambdaTypeTests]
+                  TestLabel "lambdaType" lambdaTypeTests,
+                  TestLabel "typeChecking" typeCheckingTests]
 
 runTests = runTestTT tests
 

@@ -7,3 +7,6 @@ import Lambda.SystemF.Term
 -- id = \(a:*).\(x:a).x, id = \(a:*)(x:a).x
 iComb :: LambdaTerm
 iComb = TLam "a" $ Lam "x" (TVar "a") $ Var "x"
+
+iCombType :: Type
+iCombType = ForAll "a" $ Arrow (TVar "a") (TVar "a")
