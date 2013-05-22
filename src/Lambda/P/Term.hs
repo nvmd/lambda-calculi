@@ -47,6 +47,20 @@ class LambdaCalculus a where
   checkCtx :: Context a -> Bool
   doType :: a -> Context a -> Maybe a
 
+alphaEq :: [Sym] -> LambdaPTerm -> [Sym] -> LambdaPTerm -> Bool
+-- alphaEq (typeInCtx ctx1 x) (typeInCtx ctx2 y)
+alphaEq bound1 (Var x)      bound2 (Var y)      = x == y || (   x `elem` bound1
+                                                             && y `elem` bound2)
+alphaEq bound1 Type         bound2 Type         = True
+alphaEq bound1 Kind         bound2 Kind         = True
+alphaEq bound1 (App m n)    bound2 (App p q)    =  alphaEq bound1 m bound2 p
+                                                && alphaEq bound1 n bound2 q
+alphaEq bound1 (Lam x a m)  bound2 (Lam y b n)  = undefined &&
+                                                   alphaEq    bound1 a     bound2 b
+                                                && alphaEq (x:bound1) m (x:bound2) n
+alphaEq bound1 (Prod x a b) bound2 (Prod y c d) = undefined
+alphaEq _      _            _      _            = False
+
 -- ->_\beta
 betaConv :: LambdaCalculus a => a -> a
 betaConv t = undefined
