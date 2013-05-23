@@ -10,7 +10,7 @@ data LambdaPTerm = Var Sym
                  | App LambdaPTerm LambdaPTerm
                  | Lam Sym LambdaPTerm LambdaPTerm
                  | Prod Sym LambdaPTerm LambdaPTerm
-                 deriving Show
+                 deriving (Show, Eq)
 
 isTypeOrKind (Just Type) = True
 isTypeOrKind (Just Kind) = True
@@ -125,8 +125,3 @@ instance LambdaCalculus LambdaPTerm where
   doType (Prod x a b) g = isType2 $ doType a g >> isTypeOrKind2 bType
                         where bType = doType b (extendCtx x a g)
   doType _            _ = mzero
-
-
-
-tx = (Var "x")
-tg = (Context [("x", (Var "Int")), ("Int", Type)])
