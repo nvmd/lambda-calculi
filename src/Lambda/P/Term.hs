@@ -111,10 +111,10 @@ instance LambdaCalculus LambdaPTerm where
   checkCtx (Context ((x,t):xs)) = isTypeOrKind (doType t (Context xs)) == True
 
 -- typing due to geuvers
-  doType (Var x) g@(Context e) | (checkCtx g) = lookup x e
-                               | otherwise    = Nothing
-  doType Type g | (checkCtx g) = return Kind
-                | otherwise    = mzero
+  doType (Var x) g@(Context e) | checkCtx g = lookup x e
+                               | otherwise  = mzero
+  doType Type         g        | checkCtx g = return Kind
+                               | otherwise  = mzero
   doType (App m n)    g = isProd2 $ doType m g >>= \p ->
                                     doType n g >>= \d ->
                                     case p of
@@ -124,7 +124,7 @@ instance LambdaCalculus LambdaPTerm where
                                                >>= return . (\b -> Prod x a b)
   doType (Prod x a b) g = isType2 $ doType a g >> isTypeOrKind2 bType
                         where bType = doType b (extendCtx x a g)
-  doType _            _ = Nothing
+  doType _            _ = mzero
 
 
 
