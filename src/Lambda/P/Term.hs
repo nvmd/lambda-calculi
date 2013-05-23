@@ -48,6 +48,9 @@ class LambdaCalculus a where
   checkCtx :: Context a -> Bool
   doType :: a -> Context a -> Maybe a
 
+alphaEqStub :: LambdaPTerm -> LambdaPTerm -> Bool
+alphaEqStub m n = alphaEq [] m [] n
+
 alphaEq :: [Sym] -> LambdaPTerm -> [Sym] -> LambdaPTerm -> Bool
 -- alphaEq (typeInCtx ctx1 x) (typeInCtx ctx2 y)
 alphaEq bound1 (Var x)      bound2 (Var y)      = x == y || (   x `elem` bound1
@@ -63,29 +66,29 @@ alphaEq bound1 (Prod x a b) bound2 (Prod y c d) = undefined
 alphaEq _      _            _      _            = False
 
 -- ->_\beta
---betaConv :: LambdaCalculus a => a -> Context a -> a
 betaConv :: LambdaPTerm -> Context LambdaPTerm -> LambdaPTerm
-betaConv m@(Var x)      ctx = m
-betaConv m@(Type)       ctx = m
-betaConv m@(Kind)       ctx = m
-betaConv p@(App (Lam x a m) n) ctx = fromMaybe p $
-                                     doType n ctx >>= \t ->
-                                     betaEqM t a   >>
-                                     return (substitution m x n)
-betaConv m@(App p q)    ctx = m
-betaConv p@(Lam x a m)  ctx = p
-betaConv m@(Prod x a b) ctx = m
+betaConv p@(App (Lam x a m) n)  ctx = fromMaybe p $
+                                      doType n ctx >>= \t ->
+                                      betaEqM t a  >>
+                                      return (substitution m x n)
+betaConv p@(App (Prod x a b) n) ctx = fromMaybe p $
+                                      doType n ctx >>= \t ->
+                                      betaEqM t a  >>
+                                      return (substitution b x n)
+betaConv p                      ctx = p
 
 -- ->>_\beta
-betaRed :: LambdaCalculus a => a -> a
+--betaRed :: LambdaCalculus a => a -> a
 betaRed t = undefined
 
 -- =_\beta
-betaEq :: LambdaCalculus a => a -> a -> Bool
+--betaEq :: LambdaCalculus a => a -> a -> Bool
 betaEq m n = isJust $ betaEqM m n
 
-betaEqM :: LambdaCalculus a => a -> a -> Maybe a
-betaEqM m n = undefined
+--betaEqM :: LambdaCalculus a => a -> a -> Maybe a
+betaEqM m n = if alphaEqStub mRed nRed then return mRed else mzero
+            where mRed = betaRed m
+                  nRed = betaRed n
 
 -- M[x := N], where M, N are terms, x is a variable
 substitution :: LambdaPTerm -> Sym -> LambdaPTerm -> LambdaPTerm
