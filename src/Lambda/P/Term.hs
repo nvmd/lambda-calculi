@@ -1,6 +1,7 @@
 module Lambda.P.Term where
 
 import Control.Monad --(mfilter, MonadPlus)
+import Data.Maybe (fromMaybe, isJust)
 
 type Sym = String
 data LambdaPTerm = Var Sym
@@ -62,8 +63,18 @@ alphaEq bound1 (Prod x a b) bound2 (Prod y c d) = undefined
 alphaEq _      _            _      _            = False
 
 -- ->_\beta
-betaConv :: LambdaCalculus a => a -> a
-betaConv t = undefined
+--betaConv :: LambdaCalculus a => a -> Context a -> a
+betaConv :: LambdaPTerm -> Context LambdaPTerm -> LambdaPTerm
+betaConv m@(Var x)      ctx = m
+betaConv m@(Type)       ctx = m
+betaConv m@(Kind)       ctx = m
+betaConv p@(App (Lam x a m) n) ctx = fromMaybe p $
+                                     doType n ctx >>= \t ->
+                                     betaEqM t a   >>
+                                     return (substitution m x n)
+betaConv m@(App p q)    ctx = m
+betaConv p@(Lam x a m)  ctx = p
+betaConv m@(Prod x a b) ctx = m
 
 -- ->>_\beta
 betaRed :: LambdaCalculus a => a -> a
@@ -71,7 +82,10 @@ betaRed t = undefined
 
 -- =_\beta
 betaEq :: LambdaCalculus a => a -> a -> Bool
-betaEq m n = undefined
+betaEq m n = isJust $ betaEqM m n
+
+betaEqM :: LambdaCalculus a => a -> a -> Maybe a
+betaEqM m n = undefined
 
 -- M[x := N], where M, N are terms, x is a variable
 substitution :: LambdaPTerm -> Sym -> LambdaPTerm -> LambdaPTerm
