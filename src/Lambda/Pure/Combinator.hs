@@ -15,6 +15,12 @@ kstarComb = Lam "x" $ Lam "y" $ Var "y"
 sComb :: LambdaTerm
 sComb = Lam "x" $ Lam "y" $ Lam "z" $ App (App (Var "x") (Var "z")) (App (Var "y") (Var "z"))
 
+omegaComb :: LambdaTerm
+omegaComb = Lam "x" $ App (Var "x") (Var "x")
+
+bigOmegaComb :: LambdaTerm
+bigOmegaComb = App omegaComb omegaComb
+
 hI :: a -> a
 hI x = x
 
